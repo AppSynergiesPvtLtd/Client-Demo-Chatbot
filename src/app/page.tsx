@@ -1,65 +1,140 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+
+interface Message {
+  sender: "user" | "bot";
+  text: string;
+  timestamp: string;
+}
+
+export default function ChatbotPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: Message = {
+      sender: "user",
+      text: input,
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await axios.post(
+        "https://n8n.srv1028016.hstgr.cloud/webhook/chatbot-testing",
+        { Question: userMessage.text },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const botResponse =
+        typeof res.data === "object" && res.data.Response
+          ? res.data.Response
+          : "Sorry, I couldn't get a valid response.";
+
+      const botMessage: Message = {
+        sender: "bot",
+        text: botResponse,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (err) {
+      const errorMsg: Message = {
+        sender: "bot",
+        text: "⚠️ Something went wrong. Please try again later.",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") sendMessage();
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl h-full max-h-[95vh] bg-white shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col">
+        <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center text-blue-600">
+          AI Chatbot
+        </h1>
+
+        {/* Chat window */}
+        <div className="flex-1 overflow-y-auto mb-3 sm:mb-4 p-3 border border-gray-200 rounded-xl bg-gray-50 space-y-3">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`flex flex-col ${
+                msg.sender === "user" ? "items-end" : "items-start"
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <div
+                className={`px-4 py-2 rounded-2xl text-sm max-w-[80%] whitespace-pre-wrap ${
+                  msg.sender === "user"
+                    ? "bg-blue-500 text-white rounded-br-none"
+                    : "bg-gray-200 text-gray-900 rounded-bl-none"
+                }`}
+              >
+                {msg.text}
+              </div>
+              <span className="text-xs text-gray-400 mt-1">
+                {msg.timestamp}
+              </span>
+            </div>
+          ))}
+          {loading && (
+            <div className="text-sm text-gray-400 italic">Bot is typing...</div>
+          )}
+          <div ref={chatEndRef}></div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Input section */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your question..."
+            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <button
+            onClick={sendMessage}
+            disabled={loading}
+            className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Send
+          </button>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
