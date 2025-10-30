@@ -12,8 +12,11 @@ interface Message {
 export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showIdInput, setShowIdInput] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,9 +43,17 @@ export default function ChatbotPage() {
     setLoading(true);
 
     try {
+      const requestBody: { Question: string; userId?: string } = {
+        Question: userMessage.text,
+      };
+
+      if (userId.trim()) {
+        requestBody.userId = userId.trim();
+      }
+
       const res = await axios.post(
         "https://n8n.srv1028016.hstgr.cloud/webhook/chatbot-testing",
-        { Question: userMessage.text },
+        requestBody,
         { headers: { "Content-Type": "application/json" } }
       );
 
@@ -73,68 +84,265 @@ export default function ChatbotPage() {
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
+      inputRef.current?.focus();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") sendMessage();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const clearChat = () => {
+    setMessages([]);
   };
 
   return (
-    <main className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl h-full max-h-[95vh] bg-white shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col">
-        <h1 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-center text-blue-600">
-          AI Chatbot
-        </h1>
+    <main className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-3 sm:p-4 md:p-6">
+      <div className="w-full max-w-sm sm:max-w-md md:max-w-3xl lg:max-w-4xl h-[98vh] sm:h-[95vh] bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl border border-white/20 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-4 sm:p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-lg rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 sm:w-7 sm:h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold">
+                  Client Chatbot Demo - AI Assistant
+                </h1>
+                <p className="text-xs sm:text-sm text-white/80">
+                  Always here to help
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={clearChat}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
+              title="Clear chat"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-        {/* Chat window */}
-        <div className="flex-1 overflow-y-auto mb-3 sm:mb-4 p-3 border border-gray-200 rounded-xl bg-gray-50 space-y-3">
+        {/* Chat Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/50">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 px-4">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
+                  Welcome to AI Assistant
+                </h2>
+                <p className="text-sm sm:text-base text-gray-500">
+                  Start a conversation by typing your question below
+                </p>
+              </div>
+            </div>
+          )}
+
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex flex-col ${
-                msg.sender === "user" ? "items-end" : "items-start"
-              }`}
+              className={`flex ${
+                msg.sender === "user" ? "justify-end" : "justify-start"
+              } animate-fadeIn`}
             >
               <div
-                className={`px-4 py-2 rounded-2xl text-sm max-w-[80%] whitespace-pre-wrap ${
-                  msg.sender === "user"
-                    ? "bg-blue-500 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-900 rounded-bl-none"
+                className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${
+                  msg.sender === "user" ? "items-end" : "items-start"
                 }`}
               >
-                {msg.text}
+                <div
+                  className={`px-4 py-3 rounded-2xl shadow-lg text-sm sm:text-base whitespace-pre-wrap break-words ${
+                    msg.sender === "user"
+                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-md"
+                      : "bg-white text-gray-800 rounded-bl-md border border-gray-100"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+                <span className="text-xs text-gray-400 mt-1.5 px-1">
+                  {msg.timestamp}
+                </span>
               </div>
-              <span className="text-xs text-gray-400 mt-1">
-                {msg.timestamp}
-              </span>
             </div>
           ))}
+
           {loading && (
-            <div className="text-sm text-gray-400 italic">Bot is typing...</div>
+            <div className="flex justify-start animate-fadeIn">
+              <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-md shadow-lg border border-gray-100">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                </div>
+              </div>
+            </div>
           )}
           <div ref={chatEndRef}></div>
         </div>
 
-        {/* Input section */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your question..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={loading}
-            className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
-          >
-            Send
-          </button>
+        {/* Input Area */}
+        <div className="p-4 sm:p-6 bg-white/90 backdrop-blur-lg border-t border-gray-100">
+          {/* User ID Toggle */}
+          <div className="mb-3">
+            <button
+              onClick={() => setShowIdInput(!showIdInput)}
+              className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center space-x-1 transition-colors duration-200"
+            >
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  showIdInput ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+              <span>{showIdInput ? "Hide" : "Add"} User ID (Optional)</span>
+            </button>
+          </div>
+
+          {/* User ID Input */}
+          {showIdInput && (
+            <div className="mb-3 animate-fadeIn">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Enter your user ID..."
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all duration-200 pr-10"
+                />
+                <svg
+                  className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                  />
+                </svg>
+              </div>
+            </div>
+          )}
+
+          {/* Message Input */}
+          <div className="flex items-end space-x-2">
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm sm:text-base text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all duration-200 pr-12"
+              />
+              <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-2 rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                title="Send message"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Info text */}
+          <p className="text-xs text-gray-400 mt-2 text-center">
+            Press Enter to send • Shift + Enter for new line
+          </p>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </main>
   );
 }
