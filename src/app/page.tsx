@@ -13,8 +13,13 @@ export default function ChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [userId, setUserId] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showIdInput, setShowIdInput] = useState(false);
+  const [showUserFields, setShowUserFields] = useState(true);
+  const [fieldErrors, setFieldErrors] = useState({
+    userId: false,
+    userEmail: false,
+  });
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -26,8 +31,30 @@ export default function ChatbotPage() {
     scrollToBottom();
   }, [messages]);
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
+
+    // Validate required fields
+    const errors = {
+      userId: !userId.trim(),
+      userEmail: !userEmail.trim() || !validateEmail(userEmail.trim()),
+    };
+
+    setFieldErrors(errors);
+
+    // If any field has error, don't send message
+    if (errors.userId || errors.userEmail) {
+      // Show the user fields section if hidden
+      if (!showUserFields) {
+        setShowUserFields(true);
+      }
+      return;
+    }
 
     const userMessage: Message = {
       sender: "user",
@@ -39,17 +66,15 @@ export default function ChatbotPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    setInput(""); // Only clear the message input
     setLoading(true);
 
     try {
-      const requestBody: { Question: string; userId?: string } = {
+      const requestBody = {
         Question: userMessage.text,
+        userId: userId.trim(),
+        userEmail: userEmail.trim(),
       };
-
-      if (userId.trim()) {
-        requestBody.userId = userId.trim();
-      }
 
       const res = await axios.post(
         "https://n8n.srv1028016.hstgr.cloud/webhook/chatbot-testing",
@@ -176,7 +201,7 @@ export default function ChatbotPage() {
                   Welcome to AI Assistant
                 </h2>
                 <p className="text-sm sm:text-base text-gray-500">
-                  Start a conversation by typing your question below
+                  Please fill in your details below to start chatting
                 </p>
               </div>
             </div>
@@ -232,15 +257,15 @@ export default function ChatbotPage() {
 
         {/* Input Area */}
         <div className="p-4 sm:p-6 bg-white/90 backdrop-blur-lg border-t border-gray-100">
-          {/* User ID Toggle */}
+          {/* User Fields Toggle */}
           <div className="mb-3">
             <button
-              onClick={() => setShowIdInput(!showIdInput)}
+              onClick={() => setShowUserFields(!showUserFields)}
               className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center space-x-1 transition-colors duration-200"
             >
               <svg
                 className={`w-4 h-4 transition-transform duration-200 ${
-                  showIdInput ? "rotate-180" : ""
+                  showUserFields ? "rotate-180" : ""
                 }`}
                 fill="none"
                 stroke="currentColor"
@@ -253,23 +278,41 @@ export default function ChatbotPage() {
                   d="M19 9l-7 7-7-7"
                 />
               </svg>
-              <span>{showIdInput ? "Hide" : "Add"} User ID (Optional)</span>
+              <span>
+                {showUserFields ? "Hide" : "Show"} User Details{" "}
+                <span className="text-red-500">*</span>
+              </span>
             </button>
           </div>
 
-          {/* User ID Input */}
-          {showIdInput && (
-            <div className="mb-3 animate-fadeIn">
+          {/* User Details Input Fields */}
+          {showUserFields && (
+            <div className="mb-3 space-y-3 animate-fadeIn">
+              {/* User ID Field */}
               <div className="relative">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                  User ID <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
+                  onChange={(e) => {
+                    setUserId(e.target.value);
+                    if (fieldErrors.userId && e.target.value.trim()) {
+                      setFieldErrors((prev) => ({ ...prev, userId: false }));
+                    }
+                  }}
                   placeholder="Enter your user ID..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white transition-all duration-200 pr-10"
+                  className={`w-full border ${
+                    fieldErrors.userId
+                      ? "border-red-400 focus:ring-red-400"
+                      : "border-gray-200 focus:ring-indigo-400"
+                  } rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:bg-white transition-all duration-200 pr-10`}
                 />
                 <svg
-                  className="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2"
+                  className={`w-5 h-5 ${
+                    fieldErrors.userId ? "text-red-400" : "text-gray-400"
+                  } absolute right-3 top-9 transform`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -281,6 +324,60 @@ export default function ChatbotPage() {
                     d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
                   />
                 </svg>
+                {fieldErrors.userId && (
+                  <p className="text-xs text-red-500 mt-1">
+                    User ID is required
+                  </p>
+                )}
+              </div>
+
+              {/* Email Field */}
+              <div className="relative">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => {
+                    setUserEmail(e.target.value);
+                    if (
+                      fieldErrors.userEmail &&
+                      e.target.value.trim() &&
+                      validateEmail(e.target.value.trim())
+                    ) {
+                      setFieldErrors((prev) => ({ ...prev, userEmail: false }));
+                    }
+                  }}
+                  placeholder="Enter your email address..."
+                  className={`w-full border ${
+                    fieldErrors.userEmail
+                      ? "border-red-400 focus:ring-red-400"
+                      : "border-gray-200 focus:ring-indigo-400"
+                  } rounded-xl px-4 py-2.5 text-sm text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:bg-white transition-all duration-200 pr-10`}
+                />
+                <svg
+                  className={`w-5 h-5 ${
+                    fieldErrors.userEmail ? "text-red-400" : "text-gray-400"
+                  } absolute right-3 top-9 transform`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                {fieldErrors.userEmail && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {!userEmail.trim()
+                      ? "Email is required"
+                      : "Please enter a valid email address"}
+                  </p>
+                )}
               </div>
             </div>
           )}
