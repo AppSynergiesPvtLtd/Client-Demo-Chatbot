@@ -259,6 +259,8 @@ export default function AICalling() {
                   (Optional)
                 </span>
               </label>
+
+              {/* Input */}
               <input
                 type="text"
                 value={prompt}
@@ -266,6 +268,23 @@ export default function AICalling() {
                 placeholder="Enter custom prompt for the AI agent"
                 className="w-full rounded-xl border border-gray-200 p-3 text-gray-700 bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
               />
+
+              {/* Prompt Hints */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[
+                  "Ask the customer about their product issue politely.",
+                  "Confirm the user's booking details before ending the call.",
+                  "Guide the customer through troubleshooting steps step-by-step.",
+                ].map((hint, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setPrompt(hint)}
+                    className="text-xs px-3 py-1 rounded-full border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 transition-all"
+                  >
+                    {hint}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Toggles Section */}
