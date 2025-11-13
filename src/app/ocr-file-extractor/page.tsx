@@ -152,6 +152,9 @@ export default function FileUploader() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  const openLink = (url: string) => {
+    window.open(url, "_blank"); // Opens in new tab
+  };
 
   return (
     <div className="min-h-screen bg-white p-4 sm:p-8">
@@ -183,6 +186,16 @@ export default function FileUploader() {
           <p className="text-xl text-gray-600">
             Upload documents and extract data instantly with AI
           </p>
+          <button
+            onClick={() =>
+              openLink(
+                "https://docs.google.com/spreadsheets/d/189zxD0SR5OL9r3CgR1ZxU59cvyXVfRdD9dD9Zvv1MUo/edit?usp=sharing"
+              )
+            }
+            className="mt-2 px-8 py-2 rounded-full bg-linear-to-b from-green-500 to-green-600 text-white focus:ring-2 focus:ring-green-400 hover:shadow-xl transition duration-200"
+          >
+            Google Sheet
+          </button>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl border-2 border-gray-200 p-8 sm:p-10 mb-8">

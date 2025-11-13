@@ -21,6 +21,7 @@ export default function AICalling() {
   const [callFowarding, setCallFowarding] = useState(false);
   const [callForwoardingNumber, setCallFowardingNumber] = useState("");
   const [callTransfer, setCallTransfer] = useState(false);
+  const [callTransferNumber, setCallTransferNumber] = useState("");
   const [fromNumber, setFromNumber] = useState("");
   const [userNumber, setUserNumber] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,9 @@ export default function AICalling() {
     if (!userNumber) newErrors.userNumber = "Phone number is required";
     if (callFowarding && !callForwoardingNumber) {
       newErrors.callForwoardingNumber = "Forwarding number is required";
+    }
+    if (callTransfer && !callTransferNumber) {
+      newErrors.callTransferNumber = "Transfer number is required";
     }
 
     setErrors(newErrors);
@@ -69,6 +73,7 @@ export default function AICalling() {
             callFowarding,
             callForwoardingNumber,
             callTransfer,
+            callTransferNumber,
           }),
         }
       );
@@ -261,8 +266,8 @@ export default function AICalling() {
               </label>
 
               {/* Input */}
-              <input
-                type="text"
+              <textarea
+                rows={4}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Enter custom prompt for the AI agent"
@@ -292,7 +297,6 @@ export default function AICalling() {
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
                 Additional Options
               </h3>
-
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Call Forwarding Toggle */}
                 <label className="flex items-center gap-3 cursor-pointer group">
@@ -328,7 +332,6 @@ export default function AICalling() {
                   </span>
                 </label>
               </div>
-
               {/* Forwarding Number (Conditional) */}
               {callFowarding && (
                 <div className="space-y-2 pt-2">
@@ -353,6 +356,32 @@ export default function AICalling() {
                       {errors.callForwoardingNumber}
                     </p>
                   )}
+                </div>
+              )}
+              {/* Transfer Number (Conditional) */}{" "}
+              {callTransfer && (
+                <div className="space-y-2 pt-2">
+                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <ArrowRight className="w-4 h-4 text-blue-600" />
+                    Transfer Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={callTransferNumber}
+                    onChange={(e) => setCallTransferNumber(e.target.value)}
+                    placeholder="+1 234 567 8900"
+                    className={`w-full rounded-xl border ${
+                      errors.callTransferNumber
+                        ? "border-red-300"
+                        : "border-gray-200"
+                    } p-3 text-gray-700 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none`}
+                  />
+                  {errors.callTransferNumber && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" />
+                      {errors.callTransferNumber}
+                    </p>
+                  )}{" "}
                 </div>
               )}
             </div>
