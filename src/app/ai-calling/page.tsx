@@ -128,8 +128,17 @@ export default function AICalling() {
                 } p-3 text-gray-700 bg-gray-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none`}
               >
                 <option value="">Select call type</option>
-                <option value="ai-demo">AI Demo</option>
-                <option value="customer">Customer Support</option>
+                <option value="software-consultancy">Software Consultancy</option>
+                <option value="appt-confirmation">Appointment Confirmation</option>
+                <option value="move-abroad">Move Abroad</option>                                
+                <option value="car-dealership">Car Dealership</option>
+                <option value="car-dealership-inventory">Car Dealership - With Inventory</option>
+                <option value="real-estate">Real Estate Firm</option>
+                <option value="real-estate-inventory">Car Dealership - With Properties</option>
+                <option value="mortgage-firm">Mortgage Firm</option>
+                <option value="food-delivery-customer-support">Food Delivery Customer Support</option>
+                <option value="feedback">Feedback Call</option>
+                <option value="customer-support">Customer Support After Raising Complaint</option>
               </select>
               {errors.callType && (
                 <p className="text-xs text-red-500 flex items-center gap-1">
