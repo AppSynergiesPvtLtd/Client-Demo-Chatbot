@@ -92,7 +92,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f7f8] flex items-center justify-center p-9 font-[var(--font-poppins),system-ui,-apple-system,'Segoe_UI',Roboto,'Helvetica_Neue',Arial] antialiased">
-      <div className="w-[980px] border-4 border-[#111] bg-white p-9 pb-14 rounded-md shadow-[0_6px_28px_rgba(0,0,0,0.08)]">
+      <div className="w-[980px] bg-white p-9 pb-14 rounded-md shadow-[0_6px_28px_rgba(0,0,0,0.08)]">
         <h1 className="text-center text-[40px] mt-1 mb-7 font-bold">AI Automation Dashboard</h1>
         
         <div className="grid grid-cols-3 gap-[22px_28px]" aria-label="AI Automation Dashboard cards">
