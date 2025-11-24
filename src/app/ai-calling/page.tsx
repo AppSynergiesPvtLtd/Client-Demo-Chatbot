@@ -134,7 +134,7 @@ export default function AICalling() {
                 <option value="car-dealership">Car Dealership</option>
                 <option value="car-dealership-inventory">Car Dealership - With Inventory</option>
                 <option value="real-estate">Real Estate Firm</option>
-                <option value="real-estate-inventory">Car Dealership - With Properties</option>
+                <option value="real-estate-inventory">Real Estate Firm - With Properties</option>
                 <option value="mortgage-firm">Mortgage Firm</option>
                 <option value="food-delivery-customer-support">Food Delivery Customer Support</option>
                 <option value="feedback">Feedback Call</option>
